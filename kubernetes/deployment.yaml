@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: saas-tenant-1
+  name: saas-tenant-1-frontend-deployment
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: saas-tenant-1-frontend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: saas-tenant-1-frontend
+    spec:
+      containers:
+      - name: saas-tenant-1-frontend
+        image: 427398298435.dkr.ecr.us-east-2.amazonaws.com/saas-tenant-dot-cloud:latest
+        ports:
+          - containerPort: 80
