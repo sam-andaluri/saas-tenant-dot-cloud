@@ -1,25 +1,24 @@
 version: 0.2
-env:
-    parameter-store:
-        AWS_ACCESS_KEY_ID: PIPELINE_AWS_ACCESS_KEY_ID
-        AWS_SECRET_ACCESS_KEY: PIPELINE_AWS_SECRET_ACCESS_KEY
 
 phases:
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+      - echo Logging in to Docker Hub
+      - docker login -u $docker_user -p $docker_password
+      - export TAG=latest
+      - echo Git commit hash $TAG will be used as image tag
+      - echo Logging in to Amazon EKS...
+      - aws eks --region $AWS_REGION update-kubeconfig --name $EKS_CLUSTER_NAME
   build:
     commands:
       - echo Build started on `date`
       - echo Building the Docker image...
-      - docker build -t $IMAGE_REPO_NAME:latest .
-      - docker tag $IMAGE_REPO_NAME:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:latest
+      - docker build -t $IMAGE_REPO_NAME:$TAG .
+      - docker tag $IMAGE_REPO_NAME:$TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:$TAG
   post_build:
     commands:
       - echo Build completed on `date`
       - echo Pushing the Docker image...
-      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:latest         
-      - echo "Update Kube Config"      
-      - aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $AWS_REGION
-      - kubectl get pods --all-namespaces
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME:$TAG

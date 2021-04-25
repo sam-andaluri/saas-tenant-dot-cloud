@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   namespace: saas-tenant-1
-  name: saas-tenant-1-frontend-deployment
+  name: saas-tenant-frontend-deployment
 spec:
   replicas: 1
   revisionHistoryLimit: 3
@@ -19,3 +19,31 @@ spec:
         image: 427398298435.dkr.ecr.us-east-2.amazonaws.com/saas-tenant-dot-cloud:latest
         ports:
           - containerPort: 80
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "766Mi"
+            cpu: "750m"
+        env:
+          - name: REACT_APP_AUTH0_DOMAIN
+            valueFrom:
+              secretKeyRef:
+                name: provider
+                key: REACT_APP_AUTH0_DOMAIN
+          - name: REACT_APP_AUTH0_CLIENT_ID
+            valueFrom:
+              secretKeyRef:
+                name: provider
+                key: REACT_APP_AUTH0_CLIENT_ID
+        volumeMounts:
+          - name: tmp
+            mountPath: /tmp/envs
+      initContainers:
+        - name: create-env
+          image: busybox
+          command: [ '/bin/sh', '-c', 'echo $REACT_APP_AUTH0_DOMAIN > /tmp/envs/.env && echo $REACT_APP_AUTH0_CLIENT_ID >> /tmp/envs/.env' ]
+      volumes:
+        - name: tmp
+          emptyDir: {}
