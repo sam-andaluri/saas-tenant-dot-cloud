@@ -1,0 +1,23 @@
+scenarios:
+- name: saas-tenant-1
+  description: >
+    Verifies that after a pod is killed,
+    it's succesfully rescheduled after 30 seconds.
+  steps:
+  - podAction:
+      matches:
+        - namespace: saas-tenant-1
+      filters:
+        - randomSample:
+            size: 1
+      actions:
+        - kill:
+            probability: 1
+  - wait:
+      seconds: 30
+  - podAction:
+      matches:
+        - namespace: saas-tenant-1
+      actions:
+        - checkPodState:
+            state: Running
